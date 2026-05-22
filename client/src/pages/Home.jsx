@@ -1,88 +1,73 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import SearchBar from "../components/SearchBar";
 import ImageCard from "../components/ImageCard";
-import { GetPosts } from "../api";
 import Loader from "../components/Loader";
+import { GetPosts } from "../api";
 
-const Container = styled.div`
+const Container = styled.main`
   height: 100%;
-  overflow-y: scroll;
-  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
-  padding: 30px 30px;
-  padding-bottom: 50px;
+  overflow-y: auto;
+  padding: 40px 48px 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 32px;
+
   @media (max-width: 768px) {
-    padding: 6px 10px;
-  }
-  
-  @keyframes gradientBG {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+    padding: 24px 16px 40px;
   }
 `;
 
 const Headline = styled.div`
-  font-size: 34px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_primary};
+  text-align: center;
   display: flex;
-  align-items: center;
   flex-direction: column;
+  gap: 8px;
+`;
+
+const Title = styled.h1`
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: ${({ theme }) => theme.text_primary};
 
   @media (max-width: 600px) {
-    font-size: 22px;
+    font-size: 24px;
   }
 `;
 
-const Span = styled.div`
-  font-size: 30px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #8a2be2 0%, #9d4edd 100%);
+const Subtitle = styled.span`
+  font-size: 18px;
+  font-weight: 600;
+  background: linear-gradient(135deg, ${({ theme }) => theme.primary}, ${({ theme }) => theme.secondary});
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
   @media (max-width: 600px) {
-    font-size: 20px;
+    font-size: 15px;
   }
 `;
 
-const Wrapper = styled.div`
+const Grid = styled.div`
   width: 100%;
   max-width: 1400px;
-  padding: 32px 0px;
-  display: flex;
-  justify-content: center;
-`;
-
-const CardWrapper = styled.div`
   display: grid;
   gap: 24px;
-  width: 100%;
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  @media (min-width: 900px) and (max-width: 1199px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  @media (min-width: 600px) and (max-width: 899px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: 599px) {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+
+  @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const EmptyState = styled.div`
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  color: ${({ theme }) => theme.text_muted};
+  font-size: 15px;
 `;
 
 const Home = () => {
@@ -92,72 +77,70 @@ const Home = () => {
   const [search, setSearch] = useState("");
   const [filteredPosts, setFilteredPosts] = useState([]);
 
-  const getPosts = async () => {
-    setLoading(true);
-    await GetPosts()
-      .then((res) => {
-        setLoading(false);
-        // Reverse once here when setting state
-        const reversedPosts = res?.data?.data ? [...res.data.data].reverse() : [];
-        setPosts(reversedPosts);
-        setFilteredPosts(reversedPosts);
-      })
-      .catch((error) => {
-        setError(error?.response?.data?.message);
-        setLoading(false);
-      });
-  };
-
   useEffect(() => {
-    getPosts();
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const res = await GetPosts();
+        const data = res?.data?.data || [];
+        setPosts(data);
+        setFilteredPosts(data);
+      } catch (err) {
+        setError(err?.response?.data?.message || "Failed to load posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
   }, []);
 
-  //Search
   useEffect(() => {
     if (!search) {
       setFilteredPosts(posts);
       return;
     }
-
-    const SearchFilteredPosts = posts.filter((post) => {
-      const promptMatch = post?.prompt
-        ?.toLowerCase()
-        .includes(search.toString().toLowerCase());
-      const authorMatch = post?.name
-        ?.toLowerCase()
-        .includes(search.toString().toLowerCase());
-
-      return promptMatch || authorMatch;
-    });
-
-    setFilteredPosts(SearchFilteredPosts);
+    const q = search.toLowerCase();
+    setFilteredPosts(
+      posts.filter(
+        (p) =>
+          p?.prompt?.toLowerCase().includes(q) ||
+          p?.name?.toLowerCase().includes(q)
+      )
+    );
   }, [posts, search]);
+
+  if (error) {
+    return (
+      <Container>
+        <EmptyState style={{ color: "#ef4444" }}>{error}</EmptyState>
+      </Container>
+    );
+  }
 
   return (
     <Container>
       <Headline>
-        Explore More in the Community!
-        <Span>{`</Created with Ai>`}</Span>
+        <Title>Explore the Community</Title>
+        <Subtitle>{"< Created with AI />"}</Subtitle>
       </Headline>
       <SearchBar search={search} setSearch={setSearch} />
-      <Wrapper>
-        {error && <div style={{ color: "red" }}>{error}</div>}
-        {loading ? (
-          <Loader/>
-        ) : (
-          <CardWrapper>
-            {filteredPosts.length === 0 ? (
-              <>No Posts Found</>
-            ) : (
-              <>
-                {filteredPosts.map((item) => (
-                  <ImageCard key={item._id} item={item} />
-                ))}
-              </>
-            )}
-          </CardWrapper>
-        )}
-      </Wrapper>
+      {loading ? (
+        <Loader />
+      ) : (
+        <Grid>
+          {filteredPosts.length === 0 ? (
+            <EmptyState>
+              {search
+                ? "No posts match your search. Try different keywords."
+                : "No posts yet. Be the first to share!"}
+            </EmptyState>
+          ) : (
+            filteredPosts.map((item) => (
+              <ImageCard key={item._id} item={item} />
+            ))
+          )}
+        </Grid>
+      )}
     </Container>
   );
 };

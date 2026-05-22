@@ -1,95 +1,58 @@
-import Loader from "./Loader";
-import React from "react";
 import styled from "styled-components";
 
-const Button = styled.div`
-  border-radius: 12px;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+const StyledButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: min-content;
-  padding: 12px 28px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: ${({ theme }) => theme.radiusSm};
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
   border: none;
-  background: linear-gradient(135deg, #8a2be2, #9d4edd);
   min-width: fit-content;
-  @media (max-width: 600px) {
-    padding: 10px 16px;
+
+  background: ${({ $variant, theme }) =>
+    $variant === "secondary"
+      ? `linear-gradient(135deg, ${theme.secondary}, #818cf8)`
+      : `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`};
+
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
   }
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
   }
 
-  ${({ type, theme }) =>
-    type === "secondary"
-      ? `
-  background: linear-gradient(135deg, ${theme.secondary}, #bb86fc);
-  `
-      : `
-  background: linear-gradient(135deg, ${theme.primary}, #9d4edd);
-`}
-
-  ${({ isDisabled }) =>
-    isDisabled &&
-    `
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-
-  `}
-  ${({ isLoading }) =>
-    isLoading &&
-    `
-    opacity: 0.8;
-  cursor: not-allowed;
-`}
-${({ flex }) =>
-    flex &&
-    `
-    flex: 1;
-`}
+  ${({ $flex }) => $flex && "flex: 1;"}
 `;
 
-const button = ({
-  text,
-  isLoading,
-  isDisabled,
-  rightIcon,
-  leftIcon,
-  type,
-  onClick,
-  flex,
-}) => {
-  return (
-    <Button
-      onClick={() => !isDisabled && !isLoading && onClick()}
-      isDisabled={isDisabled}
-      type={type}
-      isLoading={isLoading}
-      flex={flex}
-    >
-      {isLoading ? (
-        <>
-          <Loader size="small" />
-        </>
-      ) : (
-        <>
-          {leftIcon}
-          {text}
-          {rightIcon}
-        </>
-      )}
-    </Button>
-  );
-};
+const Button = ({ text, isLoading, isDisabled, leftIcon, type, onClick, flex }) => (
+  <StyledButton
+    onClick={() => !isDisabled && !isLoading && onClick?.()}
+    disabled={isDisabled || isLoading}
+    $variant={type}
+    $flex={flex}
+  >
+    {isLoading ? (
+      <span style={{ width: 18, height: 18, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
+    ) : (
+      <>
+        {leftIcon}
+        {text}
+      </>
+    )}
+  </StyledButton>
+);
 
-export default button;
+export default Button;

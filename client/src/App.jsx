@@ -1,46 +1,46 @@
-import styled, { ThemeProvider } from "styled-components";
+import styled, { ThemeProvider, createGlobalStyle } from "styled-components";
 import { darkTheme } from "./utils/Theme";
 import Home from "./pages/Home";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import CreatePost from "./pages/CreatePost";
 
+const GlobalStyle = createGlobalStyle`
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
 
 const Container = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
+  background: ${({ theme }) => theme.bg};
   color: ${({ theme }) => theme.text_primary};
-  overflow-x: hidden;
-  overflow-y: hidden;
-  transition: all 0.2s ease;
-  background: linear-gradient(135deg, #0f0f1a 0%, #000000 100%);
-  min-height: 100vh;
+  overflow: hidden;
 `;
 
-
-const Wrapper = styled.div`
-  height: 100%;
+const Main = styled.div`
+  flex: 1;
+  overflow: hidden;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex: 3;
 `;
 
 function App() {
   return (
     <ThemeProvider theme={darkTheme}>
+      <GlobalStyle />
       <Container>
-        <Wrapper>
-          <BrowserRouter>
-            <Navbar />
+        <BrowserRouter>
+          <Navbar />
+          <Main>
             <Routes>
-              <Route path="/" element={<Home />} exact />
-              <Route path="/post" element={<CreatePost />} exact />
+              <Route path="/" element={<Home />} />
+              <Route path="/post" element={<CreatePost />} />
             </Routes>
-          </BrowserRouter>
-        </Wrapper>
+          </Main>
+        </BrowserRouter>
       </Container>
     </ThemeProvider>
   );

@@ -1,48 +1,53 @@
-import React from "react";
-import { SearchOutlined } from "@mui/icons-material";
 import styled from "styled-components";
+import { SearchOutlined } from "@mui/icons-material";
 
-const SearchBarContainer = styled.div`
-  max-width: 550px;
+const Container = styled.div`
+  width: 100%;
+  max-width: 520px;
   display: flex;
-  width: 90%;
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  background: rgba(26, 26, 46, 0.7);
-  color: ${({ theme }) => theme.text_primary};
-  border-radius: 12px;
-  padding: 16px 20px;
-  cursor: pointer;
-  gap: 12px;
   align-items: center;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: ${({ theme }) => theme.radiusMd};
+  border: 1px solid ${({ theme }) => theme.glassBorder};
+  background: ${({ theme }) => theme.card};
+  backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+
   &:focus-within {
-    border-color: #8a2be2;
-    box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+    border-color: ${({ theme }) => theme.borderHover};
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  }
+
+  @media (max-width: 600px) {
+    width: calc(100% - 40px);
   }
 `;
 
-const SearchBar = ({ search, setSearch }) => {
-    return (
-      <SearchBarContainer>
-        <SearchOutlined style={{ color: 'rgba(192, 192, 192, 0.7)' }} />
-        <input
-          placeholder="Search with prompt or name . . ."
-          style={{
-            border: "none",
-            outline: "none",
-            width: "100%",
-            color: "inherit",
-            fontSize: "16px",
-            background: "transparent",
-            caretColor: "#9d4edd",
-          }}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </SearchBarContainer>
-    );
-  };
-  
-  export default SearchBar;
+const Input = styled.input`
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: ${({ theme }) => theme.text_primary};
+  font-size: 15px;
+  font-family: inherit;
+  caret-color: ${({ theme }) => theme.primary};
+
+  &::placeholder {
+    color: ${({ theme }) => theme.text_muted};
+  }
+`;
+
+const SearchBar = ({ search, setSearch }) => (
+  <Container>
+    <SearchOutlined sx={{ color: "#64748b", fontSize: 20 }} />
+    <Input
+      placeholder="Search by prompt or author..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+  </Container>
+);
+
+export default SearchBar;

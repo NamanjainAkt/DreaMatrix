@@ -1,158 +1,157 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Button from "./Button";
 import TextInput from "./TextInput";
-import { AutoAwesome, CreateRounded } from "@mui/icons-material";
+import { AutoAwesome, CloudUpload } from "@mui/icons-material";
 import { CreatePost, generateAIImage } from "../api";
 
 const Form = styled.div`
   flex: 1;
-  padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 9%;
-  justify-content: center;
-  background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(138, 43, 226, 0.2);
+  gap: 24px;
+  padding: 32px;
+  border-radius: ${({ theme }) => theme.radiusLg};
+  background: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.glassBorder};
 `;
 
-const Top = styled.div`
+const Header = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
 `;
 
-const Title = styled.div`
-  font-size: 28px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_primary};
-  background: linear-gradient(90deg, #8a2be2, #9d4edd);
+const Title = styled.h2`
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.primary}, ${({ theme }) => theme.secondary});
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 `;
 
-const Desc = styled.div`
-  font-size: 17px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_secondary};
+const Desc = styled.p`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text_muted};
+  line-height: 1.5;
 `;
 
-const Body = styled.div`
+const Fields = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+`;
+
+const Note = styled.p`
   font-size: 12px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_secondary};
+  color: ${({ theme }) => theme.text_muted};
+  text-align: center;
+  padding: 8px;
+  border-radius: ${({ theme }) => theme.radiusSm};
+  background: ${({ theme }) => theme.glass};
 `;
 
 const Actions = styled.div`
-  flex: 1;
   display: flex;
   gap: 12px;
+
   @media (max-width: 768px) {
     flex-direction: column;
   }
 `;
 
+const ErrorMsg = styled.div`
+  color: ${({ theme }) => theme.red};
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+  border-radius: ${({ theme }) => theme.radiusSm};
+  background: rgba(239, 68, 68, 0.1);
+`;
+
 const GenerateImageForm = ({
-  post,
-  setPost,
-  createPostLoading,
-  setGenerateImageLoading,
-  generateImageLoading,
-  setCreatePostLoading,
+  post, setPost, createPostLoading,
+  setGenerateImageLoading, generateImageLoading, setCreatePostLoading,
 }) => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
-  
+
   const generateImageFun = async () => {
     setGenerateImageLoading(true);
     setError("");
-    await generateAIImage({ prompt: post.prompt })
-      .then((res) => {
-        setPost({
-          ...post,
-          photo: `data:image/jpeg;base64,${res?.data?.photo}`,
-          filePath: res?.data?.filePath
-        });
-        setGenerateImageLoading(false);
-      })
-      .catch((error) => {
-        setError(error?.response?.data?.message || "Failed to generate image");
-        setGenerateImageLoading(false);
-      });
+    try {
+      const res = await generateAIImage({ prompt: post.prompt });
+      setPost({ ...post, photo: res?.data?.photo });
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to generate image");
+    } finally {
+      setGenerateImageLoading(false);
+    }
   };
 
   const createPostFun = async () => {
     setCreatePostLoading(true);
     setError("");
-    await CreatePost({
-      name: post.name,
-      prompt: post.prompt,
-      photo: post.photo,
-      filePath: post.filePath
-    })
-      .then((res) => {
-        setCreatePostLoading(false);
-        navigate("/");
-      })
-      .catch((error) => {
-        setError(error?.response?.data?.message || "Failed to create post");
-        setCreatePostLoading(false);
+    try {
+      await CreatePost({
+        name: post.name,
+        prompt: post.prompt,
+        photo: post.photo,
       });
+      navigate("/");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to create post");
+    } finally {
+      setCreatePostLoading(false);
+    }
   };
+
   return (
     <Form>
-      <Top>
-        <Title>Generate Image with prompt</Title>
-        <Desc>
-          Write your prompt according to the image you want to generate!
-        </Desc>
-      </Top>
-      <Body>
+      <Header>
+        <Title>Create an Image</Title>
+        <Desc>Write a detailed prompt and let AI bring your vision to life</Desc>
+      </Header>
+      <Fields>
         <TextInput
           label="Author"
-          placeholder="Enter your name.."
+          placeholder="Your name..."
           name="name"
           value={post.name}
           handelChange={(e) => setPost({ ...post, name: e.target.value })}
         />
         <TextInput
           label="Image Prompt"
-          placeholder="Write a detailed prompt about the image . . . "
-          name="name"
-          rows="8"
+          placeholder="A detailed description of the image you want..."
+          name="prompt"
+          rows="6"
           textArea
           value={post.prompt}
           handelChange={(e) => setPost({ ...post, prompt: e.target.value })}
         />
-        {error && <div style={{ color: "red" }}>{error}</div>}
-        ** You can post the AI Generated Image to the Community **
-      </Body>
+      </Fields>
+      {error && <ErrorMsg>{error}</ErrorMsg>}
+      <Note>You can share your generated image with the community!</Note>
       <Actions>
         <Button
-          text="Generate Image"
+          text="Generate"
           flex
           leftIcon={<AutoAwesome />}
           isLoading={generateImageLoading}
-          isDisabled={post.prompt === ""}
-          onClick={() => generateImageFun()}
+          isDisabled={!post.prompt}
+          onClick={generateImageFun}
         />
         <Button
-          text="Post Image"
+          text="Share"
           flex
           type="secondary"
-          leftIcon={<CreateRounded />}
+          leftIcon={<CloudUpload />}
           isLoading={createPostLoading}
-          isDisabled={
-            post.name === "" || post.prompt === "" || post.photo === ""
-          }
-          onClick={() => createPostFun()}
+          isDisabled={!post.name || !post.prompt || !post.photo}
+          onClick={createPostFun}
         />
       </Actions>
     </Form>
